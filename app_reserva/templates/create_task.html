@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<main class="container">
+    <div class="row">
+        <section class="col-md-4 offset-md-4 mt-5">
+
+            <form action="/create_task/" method="POST" class="card card-body" enctype="multipart/form-data">
+                <h1 class="text-center">Reportar</h1>
+            
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+            
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_rut">RUT:</label>
+                    <input type="text" name="rut" required id="id_rut" class="form-control" placeholder="Rut">
+                </div>
+            
+                <div class="mb-3">
+                    <label for="id_email">Email</label>
+                    <input type="email" name="email" required id="id_email" class="form-control" placeholder="email">
+                </div>
+            
+                <div class="mb-3">
+                    <label for="id_descripcion">Descripcion</label>
+                    <input type="text" name="descripcion" required id="id_descripcion" class="form-control" placeholder="Ingresa una descripcion">
+                </div>
+            
+                <div class="mb-3">
+                    <label for="id_evidencia">Evidencia (JPG)</label>
+                    <input type="file" name="evidencia" accept="image/*" required id="id_evidencia" class="form-control">
+                </div>
+            
+                <!-- Campos para latitud y longitud ocultos, que se llenan con los valores geolocalizados -->
+                <input type="hidden" name="latitud" id="id_latitud_input">
+                <input type="hidden" name="longitud" id="id_longitud_input">
+            
+                <div class="mb-3">
+                    <label for="id_latitud">Latitud</label>
+                    <span id="id_latitud" class="form-control">Cargando...</span> <!-- Mostrará la latitud -->
+                </div>
+                
+                <div class="mb-3">
+                    <label for="id_longitud">Longitud</label>
+                    <span id="id_longitud" class="form-control">Cargando...</span> <!-- Mostrará la longitud -->
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Crear tarea</button>
+            </form>
+            
+            <script>
+                // Verificar si el navegador soporta geolocalización
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        // Obtener la latitud y longitud
+                        var latitud = position.coords.latitude;
+                        var longitud = position.coords.longitude;
+            
+                        // Redondear a 6 decimales
+                        latitud = latitud.toFixed(6);
+                        longitud = longitud.toFixed(6);
+            
+                        // Asignar los valores de latitud y longitud a las etiquetas
+                        document.getElementById('id_latitud').innerText = latitud;
+                        document.getElementById('id_longitud').innerText = longitud;
+            
+                        // Llenar los campos ocultos con los valores de latitud y longitud
+                        document.getElementById('id_latitud_input').value = latitud;
+                        document.getElementById('id_longitud_input').value = longitud;
+                    }, function(error) {
+                        console.log("Error al obtener la ubicación: " + error.message);
+                        alert("No se pudo obtener la ubicación. Por favor, habilita la geolocalización.");
+                    });
+                } else {
+                    console.log("Geolocalización no es compatible con este navegador.");
+                    alert("Tu navegador no soporta geolocalización.");
+                }
+            </script>
+            
+
+
+
+        </section>
+
+    </div>
+
+</main>
+
+
+
+
+{% endblock %}

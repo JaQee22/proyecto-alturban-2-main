@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<style>
+
+.icon-hover {
+    cursor: pointer;
+    transition: color 0.3s, transform 0.2s;
+}
+
+.icon-hover:hover {
+    color: rgb(235, 48, 15); /* Cambia el color al pasar el cursor */
+    transform: scale(2.5); /* Aumenta ligeramente el tamaño */
+}
+
+</style>
+
+<main class="container mt-4"> <!-- Contenedor responsivo con margen superior -->
+    <section>
+        <h1 class="text-center mb-4">Registros</h1> <!-- Encabezado centrado con margen inferior -->
+        <div class="table-responsive"> <!-- Hacer la tabla responsiva -->
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark"> <!-- Encabezado con estilo oscuro -->
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Descripción</th>
+                        <th>Evidencia</th>
+                        <th>Estado</th>
+                        <th>Acción</th> <!-- Nueva columna para los botones -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr>
+                            <td>{{ task.user.username }}</td>
+                            <td>{{ task.email }}</td>
+                            <td>{{ task.fecha|date:"d-m-Y" }}</td>
+                            <td>{{ task.hora|date:"H:i" }}</td>
+                            <td>{{ task.descripcion }}</td>
+                            <td>
+                                {% if task.evidencia %}
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#imageModal" data-src="{{ task.evidencia.url }}">Ver evidencia</a>
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </td>
+                            <td>{{ task.estado }}</td>
+
+                            {% if user.is_authenticated and user.is_superuser %}
+
+                            <td>
+                                <!-- Botón Actualizar -->
+
+                                <i class="bi bi-pencil-square icon-hover" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#exampleModal"
+                                    data-id="{{ task.id }}">
+                                </i>
+
+                                <!-- Botón Eliminar -->
+
+                                <i class="bi bi-trash icon-hover" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalEliminar" 
+                                    data-id="{{ task.id }}">
+                                </i>
+
+                            </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Actualizar Información de la Tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="updateForm" action="{% url 'actualizar_tarea' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" id="taskId" value="">
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-select" id="estado" name="estado">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Proceso">En Proceso</option>
+                            <option value="Completada">Completada</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript para cargar la información de la tarea en el modal
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('exampleModal')
+    modal.addEventListener('show.bs.modal', function (event) {
+        // Obtener los datos del botón que activó el modal
+        const button = event.relatedTarget; // Elemento que activó el modal
+        const taskId = button.getAttribute('data-id');
+        const descripcion = button.getAttribute('data-descripcion');
+        const estado = button.getAttribute('data-estado');
+
+        // Completar los campos del formulario con los datos
+        const modalId = modal.querySelector('#taskId');
+        const modalDescripcion = modal.querySelector('#descripcion');
+        const modalEstado = modal.querySelector('#estado');
+
+        modalId.value = taskId;
+        modalDescripcion.value = descripcion;
+        modalEstado.value = estado;
+    });
+});
+
+</script>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEliminarLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'eliminar_tarea' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar esta tarea?</p>
+                    <input type="hidden" id="idEliminar" name="id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const modalEliminar = document.getElementById('modalEliminar');
+    modalEliminar.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;  // Botón que activó el modal
+        const taskId = button.getAttribute('data-id');  // Obtén el ID de la tarea
+        const inputId = modalEliminar.querySelector('#idEliminar');  // Campo oculto del formulario
+        inputId.value = taskId;
+    });
+
+</script>
+
+
+<!-- Modal para mostrar la imagen -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="imageModalLabel">Evidencia</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Asegúrate de que la clase img-fluid está aplicada para hacer la imagen responsiva -->
+          <img id="modalImage" src="" class="img-fluid" alt="Evidencia" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const links = document.querySelectorAll('a[data-bs-toggle="modal"]');
+        
+        links.forEach(link => {
+            link.addEventListener('click', function () {
+                const imageUrl = link.getAttribute('data-src');
+                const modalImage = document.getElementById('modalImage');
+                modalImage.src = imageUrl;
+            });
+        });
+    });
+</script>
+  
+
+
+{% endblock %}

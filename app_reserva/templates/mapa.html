@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+{% load static %}
+
+<!-- CSS de Leaflet (usado por Folium) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" integrity="sha512-BtPld3NBZ9qZmlus9SE2AvO9fu0ClOgxmjKtxer52+JlZLp4dTL0PfZbWcBDwt5StKpFwhFsWFF92WInrQ5DAw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+<!-- JavaScript de Leaflet -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" integrity="sha512-vY3fak6DDAeG9Tq1KDgd8T24kVtHbNoqlENvH/aHDaYw2N7lP1hyQ52jW7KTTFdR5dPUFjWrMkK8k3IC0z74Nw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<div class="row mt-4">
+    <div class="col-md-2">
+        <h3>Mapa Zona de Riesgos</h3>
+            <p class="lead">Top 10 Ubicaciones</p>
+
+        <ol class="list-group list-group-numbered">
+            {% for location in locations|slice:":10" %} <!--solo muestra un top 10-->
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold">{{ location.user.username }}</div>
+                    {{ location.descripcion }}
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+
+    <div class="col-md-9">
+        {{ map|safe }}
+    </div>
+</div>
+
+
+{% endblock %}
